@@ -61,6 +61,39 @@
                 background-color: #cccccc;
                 cursor: not-allowed;
             }
+
+            .save-notification {
+                max-width: 800px;
+                margin: 10px auto 0 auto;
+                background-color: #e0e0e0;
+                /* Light grey to match upgrade buttons */
+                color: #333;
+                /* Dark text */
+                padding: 15px;
+                border-radius: 5px;
+                opacity: 0;
+                transition: opacity 0.3s ease-in-out;
+                text-align: center;
+                display: none;
+                font-size: 16px;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                font-family: Arial, sans-serif;
+            }
+
+            .save-notification.show {
+                opacity: 1;
+                display: block;
+            }
+
+            #saveNotification {
+                max-width: 800px;
+                margin: 10px auto 0 auto;
+                background-color: #e0e0e0;
+                padding: 15px;
+                border-radius: 5px;
+                text-align: center;
+                font-family: Arial, sans-serif;
+            }
         </style>
     </head>
 
@@ -87,7 +120,18 @@
                 Upgrade Corn Speed (Cost: $25)
             </button>
         </div>
+        <!-- Add these new buttons -->
+        <div class="upgrades" style="margin-top: 20px;">
+            <button onclick="saveGame()" class="upgrade-button">
+                Save Game
+            </button>
+            <button onclick="confirmReset()" class="upgrade-button">
+                Reset Game
+            </button>
+        </div>
     </div>
+    <div id="saveNotification" style="display: none;">Game Saved!</div>
+
 </body>
 <!-- Add this right before the closing </body> tag -->
 <script>
@@ -171,6 +215,148 @@
         corn += (cornPerSecond * cornSpeedMultiplier);
         updateDisplays();
     }, 1000);
+
+    function showSaveNotification() {
+        const notification = document.getElementById('saveNotification');
+        notification.style.display = 'block';
+
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 2000);
+    }
+
+    function saveGame() {
+        const gameData = {
+            corn: corn,
+            money: money,
+            cornPerSecond: cornPerSecond,
+            sellValue: sellValue,
+            cornUpgradeCost: cornUpgradeCost,
+            sellValueUpgradeCost: sellValueUpgradeCost,
+            cornSpeedUpgradeCost: cornSpeedUpgradeCost,
+            cornSpeedMultiplier: cornSpeedMultiplier
+        };
+        localStorage.setItem('cornSimulatorSave', JSON.stringify(gameData));
+        showSaveNotification();
+    }
+
+
+
+    // Load function
+    function loadGame() {
+        const savedData = localStorage.getItem('cornSimulatorSave');
+        if (savedData) {
+            const gameData = JSON.parse(savedData);
+            corn = gameData.corn;
+            money = gameData.money;
+            cornPerSecond = gameData.cornPerSecond;
+            sellValue = gameData.sellValue;
+            cornUpgradeCost = gameData.cornUpgradeCost;
+            sellValueUpgradeCost = gameData.sellValueUpgradeCost;
+            cornSpeedUpgradeCost = gameData.cornSpeedUpgradeCost;
+            cornSpeedMultiplier = gameData.cornSpeedMultiplier;
+            updateDisplays();
+        }
+    }
+
+    // Auto-save every 30 seconds
+    setInterval(saveGame, 30000);
+
+    function resetGame() {
+        localStorage.removeItem('cornSimulatorSave');
+        corn = 0;
+        money = 0;
+        cornPerSecond = 1;
+        sellValue = 1;
+        cornUpgradeCost = 10;
+        sellValueUpgradeCost = 15;
+        cornSpeedUpgradeCost = 25;
+        cornSpeedMultiplier = 1;
+        updateDisplays();
+    }
+
+    function confirmReset() {
+        // Create overlay
+        const overlay = document.createElement('div');
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        overlay.style.zIndex = '1000';
+
+        // Create popup
+        const popup = document.createElement('div');
+        popup.style.position = 'fixed';
+        popup.style.top = '50%';
+        popup.style.left = '50%';
+        popup.style.transform = 'translate(-50%, -50%)';
+        popup.style.backgroundColor = 'white';
+        popup.style.padding = '20px';
+        popup.style.borderRadius = '10px';
+        popup.style.boxShadow = '0 0 10px rgba(0,0,0,0.5)';
+        popup.style.zIndex = '1001';
+        popup.style.textAlign = 'center';
+
+        // Add text
+        const text = document.createElement('p');
+        text.textContent = 'Are you sure you want to reset your game?';
+        text.style.marginBottom = '20px';
+        popup.appendChild(text);
+
+        // Add buttons container
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.gap = '10px';
+        buttonContainer.style.justifyContent = 'center';
+
+        // Add Yes button
+        const yesButton = document.createElement('button');
+        yesButton.textContent = 'Yes';
+        yesButton.className = 'upgrade-button';
+        yesButton.onclick = function () {
+            resetGame();
+            document.body.removeChild(overlay);
+        };
+
+        // Add No button
+        const noButton = document.createElement('button');
+        noButton.textContent = 'No';
+        noButton.className = 'upgrade-button';
+        noButton.onclick = function () {
+            document.body.removeChild(overlay);
+        };
+
+        // Add buttons to container
+        buttonContainer.appendChild(yesButton);
+        buttonContainer.appendChild(noButton);
+        popup.appendChild(buttonContainer);
+
+        // Add popup to overlay
+        overlay.appendChild(popup);
+
+        // Add overlay to body
+        document.body.appendChild(overlay);
+    }
+
+    function resetGame() {
+        localStorage.removeItem('cornSimulatorSave');
+        corn = 0;
+        money = 0;
+        cornPerSecond = 1;
+        sellValue = 1;
+        cornUpgradeCost = 10;
+        sellValueUpgradeCost = 15;
+        cornSpeedUpgradeCost = 25;
+        cornSpeedMultiplier = 1;
+        updateDisplays();
+    }
+
+
+    // Load game when page loads
+    loadGame();
+
 
     // Initial update
     updateDisplays();
